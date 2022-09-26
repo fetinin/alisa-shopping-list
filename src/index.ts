@@ -27,17 +27,15 @@ export async function handler(
     };
   }
 
-  const userPhrase = capitalizeFirstLetter(
-    request["original_utterance"]
-      .toLowerCase()
-      .replace("добавь", "")
-      .replace("добавить", "")
-      .trim()
-  );
+  const userPhrase = request["original_utterance"]
+    .toLowerCase()
+    .replace("добавь", "")
+    .replace("добавить", "")
+    .trim();
   const items = userPhrase.split(" и ");
 
   for (const itemName of items) {
-    await addToShoppingList(itemName);
+    await addToShoppingList(capitalizeFirstLetter(itemName));
   }
 
   return {
