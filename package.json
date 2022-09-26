@@ -8,13 +8,15 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node src/index.ts",
     "typecheck": "tsc --noEmit",
-    "build": "tsc",
+    "build": "rm -rf dist/* && tsc",
+    "deploy": "npm run build && cp package.json package-lock.json .env dist/ && npm run updateYC",
+    "updateYC": "yc serverless function version create --function-name=alisa-shopping-list --runtime=nodejs16 --entrypoint=index.handler --source-path dist/",
     "format": "prettier --write src/**/*.ts"
   },
   "keywords": [],
   "author": "",
   "dependencies": {
-    "@notionhq/client": "^2.0.0",
+    "@notionhq/client": "^2.2.0",
     "dotenv": "^16.0.1"
   },
   "devDependencies": {
