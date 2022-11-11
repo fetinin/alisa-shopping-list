@@ -27,12 +27,30 @@ export async function handler(
     };
   }
 
-  const userPhrase = request["original_utterance"]
-    .toLowerCase()
+  const userPhrase: string = request["original_utterance"].toLowerCase().trim();
+
+  if (
+    userPhrase.startsWith("перечисли") ||
+    userPhrase.startsWith("перечислить") ||
+    userPhrase.startsWith("перечисли") ||
+    userPhrase.startsWith("скажи что") ||
+    userPhrase.startsWith("сказать что")
+  ) {
+    const addedItems = await listShoppingItems();
+    return {
+      version,
+      session,
+      response: {
+        text: `В списке ${addedItems.join(", ")}.`,
+        end_session: true,
+      },
+    };
+  }
+
+  const items = userPhrase
     .replace("добавь", "")
     .replace("добавить", "")
-    .trim();
-  const items = userPhrase.split(" и ");
+    .split(" и ");
 
   for (const itemName of items) {
     await addToShoppingList(capitalizeFirstLetter(itemName));
@@ -60,6 +78,28 @@ async function addToShoppingList(name: string) {
       },
     },
   });
+}
+
+async function listShoppingItems(): Promise<string[]> {
+  const notion = new Client({ auth: NOTION_TOKEN });
+
+  const response = await notion.databases.query({
+    database_id: NOTION_DB_ID,
+    filter: {
+      or: [
+        {
+          property: "Куплено",
+          checkbox: {
+            equals: false,
+          },
+        },
+      ],
+    },
+  });
+
+  return response.results.map(
+    (page: any) => page.properties["Name"].title[0].plain_text
+  );
 }
 
 function capitalizeFirstLetter(str: string) {
