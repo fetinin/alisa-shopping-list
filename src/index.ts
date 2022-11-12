@@ -1,6 +1,8 @@
+import assert from 'assert';
 import dotenv from 'dotenv';
 
 import { Client } from '@notionhq/client';
+import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 
 dotenv.config();
 
@@ -69,15 +71,52 @@ export async function handler(
 async function addToShoppingList(name: string) {
   const notion = new Client({ auth: NOTION_TOKEN });
 
-  await notion.pages.create({
-    parent: { database_id: NOTION_DB_ID },
-    properties: {
-      Name: {
-        type: "title",
-        title: [{ type: "text", text: { content: name } }],
+  const shoppingItem = await findShoppingItem(name);
+  if (!shoppingItem) {
+    await notion.pages.create({
+      parent: { database_id: NOTION_DB_ID },
+      properties: {
+        Name: {
+          type: "title",
+          title: [{ type: "text", text: { content: name } }],
+        },
       },
-    },
+    });
+    return;
+  }
+
+  assert(shoppingItem.properties["Куплено"].type === "checkbox");
+
+  if (!shoppingItem.properties["Куплено"].checkbox) {
+    // already in the list
+    return;
+  }
+
+  await notion.pages.update({
+    page_id: shoppingItem.id,
+    properties: { Куплено: { checkbox: false } },
   });
+  return;
+}
+
+async function findShoppingItem(
+  name: string
+): Promise<PageObjectResponse | null> {
+  const notion = new Client({ auth: NOTION_TOKEN });
+
+  const response = await notion.databases.query({
+    database_id: NOTION_DB_ID,
+    filter: {
+      property: "Name",
+      title: { equals: name },
+      type: "title",
+    },
+    page_size: 1,
+  });
+
+  if (response.results.length == 0) return null;
+
+  return response.results[0] as PageObjectResponse;
 }
 
 async function listShoppingItems(): Promise<string[]> {
@@ -86,14 +125,10 @@ async function listShoppingItems(): Promise<string[]> {
   const response = await notion.databases.query({
     database_id: NOTION_DB_ID,
     filter: {
-      or: [
-        {
-          property: "Куплено",
-          checkbox: {
-            equals: false,
-          },
-        },
-      ],
+      property: "Куплено",
+      checkbox: {
+        equals: false,
+      },
     },
   });
 
