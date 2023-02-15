@@ -1,8 +1,8 @@
-import assert from 'assert';
-import dotenv from 'dotenv';
+import assert from "assert";
+import dotenv from "dotenv";
 
-import { Client } from '@notionhq/client';
-import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
+import { Client } from "@notionhq/client";
+import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 
 dotenv.config();
 
@@ -34,6 +34,8 @@ export async function handler(
   if (
     userPhrase.startsWith("перечисли") ||
     userPhrase.startsWith("перечислить") ||
+    userPhrase.startsWith("огласи") ||
+    userPhrase.startsWith("огласить") ||
     userPhrase.startsWith("перечисли") ||
     userPhrase.startsWith("скажи что") ||
     userPhrase.startsWith("сказать что")
