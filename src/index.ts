@@ -60,11 +60,23 @@ export async function handler(
     await addToShoppingList(capitalizeFirstLetter(itemName));
   }
 
+  const okPhrases = [
+    "Лады",
+    "Хорошо",
+    "Поняла",
+    "Сделано",
+    "Готово",
+    "Принято",
+    "Оки-доки",
+    "Слушаюсь",
+  ];
   return {
     version,
     session,
     response: {
-      text: `Лады, добавила ${items.join(", ")} в список покупок.`,
+      text: `${getRandom(okPhrases)}, добавила ${items.join(
+        ", "
+      )} в список покупок.`,
       end_session: true,
     },
   };
@@ -141,4 +153,8 @@ async function listShoppingItems(): Promise<string[]> {
 
 function capitalizeFirstLetter(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function getRandom<T>(list: Array<T>): T {
+  return list[Math.floor(Math.random() * list.length)];
 }
